@@ -1,5 +1,7 @@
-# aws-apigw-lambda-demo
-########################
+# aws-apigw-lambda-dynamodb-typescript-demo
+###########################################
+
+[![](Architecture.png)][Architecture]
 
     Create aws profile "sandbox"
     Load aws profile "sandbox"
