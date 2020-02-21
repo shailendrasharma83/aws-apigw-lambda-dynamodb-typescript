@@ -1,0 +1,275 @@
+service: sensor-data
+
+provider:
+  name: aws
+  apiGateway:
+    apiKeySourceType: HEADER
+  logs:
+    restApi: true
+  endpointType: REGIONAL
+  runtime: nodejs12.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'eu-west-2'}
+  apiKeys:
+    - api-Key
+  usagePlan:
+    quota:
+      limit: 50000
+      offset: 2
+      period: MONTH
+    throttle:
+      burstLimit: 200
+      rateLimit: 100
+
+plugins:
+  - serverless-aws-documentation
+
+package:
+  exclude:
+    - src/**
+    - node_modules/**
+    - .serverless/**
+    - package.json
+    - package-lock.json
+    - serverless.yaml
+    - tsconfig.json
+
+custom:
+  documentation:
+    models:
+      - name: "ErrorResponse"
+        description: "Error Response"
+        contentType: "application/json"
+        schema:
+          type: "object"
+          properties:
+            status:
+              type: "number"
+            code:
+              type: "string"
+            title:
+              type: "string"
+      - name: "SensorData"
+        description: "Sensor Data"
+        contentType: "application/json"
+        schema:
+          type: "object"
+          properties:
+            SensorId:
+              type: "string"
+            TimeStamp:
+              type: "string"
+              format: "date-time"
+            Topic:
+              type: "string"
+            Payload:
+              type: "object"
+              properties:
+                Temperature:
+                  type: "string"
+                TimeStamp:
+                  type: "string"
+                  format: "date-time"
+
+    api:
+      info:
+        version: "2" # see note above about this being ignored
+        title: "Sensor Data API"
+        description: "API for managing sensor data"
+        contact:
+          name: "Shailendra Sharma"
+          email: "abc@xyz.com"
+
+functions:
+  querySensorData:
+    handler: dist/resources/sensor-data.querySensorData
+    name: "ReadSensorData"
+    description: Function for getting sensor data
+    memorySize: 128
+    timeout: 5
+    role: lambdaExecutionRole
+    events:
+      - http:
+         path: "/sensor-data/{sensorId}"
+         method: GET
+         private: true
+         request:
+           parameters:
+             querystrings:
+               sensorId: true
+         documentation:
+           summary:  Query Sensor Data
+           description: Demonstrates a get method for querying sensor data from DB
+           queryParams:
+             - name: "sensorId"
+               description: "Sensor ID"
+           methodResponses:
+             - statusCode: "200"
+               responseBody:
+                 description: "Response body description"
+               responseModels:
+                 "application/json": SensorData
+             - statusCode: "400"
+               responseModels:
+                 "application/json": ErrorResponse
+             - statusCode: "500"
+               responseModels:
+                 "application/json": ErrorResponse
+  postSensorData:
+    handler: dist/resources/sensor-data.createOrUpdateSensorData
+    name: "CreateOrUpdateSensorData"
+    description: Function for adding sensor data
+    memorySize: 128
+    timeout: 5
+    role: lambdaExecutionRole
+    events:
+      - http:
+         path: "/sensor-data"
+         method: POST
+         private: true
+         documentation:
+           summary:  Upsert Sensor Data
+           description: SensorData
+           requestBody:
+             description: "Request body description"
+           requestModels:
+             "application/json": SensorData
+           methodResponses:
+             - statusCode: "200"
+               responseBody:
+                 description: "Response body description"
+               responseModels:
+                 "application/json": SensorData
+             - statusCode: "400"
+               responseModels:
+                 "application/json": ErrorResponse
+             - statusCode: "500"
+               responseModels:
+                 "application/json": ErrorResponse
+
+  deleteSensorData:
+    handler: dist/resources/sensor-data.deleteSensorData
+    name: "DeleteSensorData"
+    description: Function for deleting sensor data
+    memorySize: 128
+    timeout: 5
+    role: lambdaExecutionRole
+    dependsOn: SNSTopic
+    events:
+      - http:
+          path: "/sensor-data"
+          method: DELETE
+          private: true
+          documentation:
+            summary:  Delete Sensor Data
+            description: Demonstrates a delete method to remove sensor data from DB
+            requestBody:
+              description: "Request body description"
+            requestModels:
+              "application/json": "SensorData"
+            methodResponses:
+              - statusCode: "200"
+                responseBody:
+                  description: "Response body description"
+                responseModels:
+                  "application/json": SensorData
+              - statusCode: "400"
+                responseModels:
+                  "application/json": ErrorResponse
+              - statusCode: "500"
+                responseModels:
+                  "application/json": ErrorResponse
+    environment:
+      TOPIC_ARN: !Ref SNSTopic
+
+  slackNotifier:
+    handler: dist/resources/sensor-data.slackNotifier
+    name: "SlackNotifierLambda"
+    description: Function for sending slack notifications
+    memorySize: 128
+    timeout: 5
+    role: lambdaExecutionRole
+    dependsOn: SNSTopic
+    environment:
+      SLACK_URL: '/services/your-slack-webhook-url-info-goes-here'
+    events:
+      - sns:
+          arn: !Ref SNSTopic
+          topicName: SNSTopic
+
+resources:
+  Resources:
+    lambdaExecutionRole:
+      Type: AWS::IAM::Role
+      DependsOn:
+        - SNSTopic
+      Properties:
+        RoleName: LambdaExecutionRole
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: LambdaExecutionPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource:
+                    - 'Fn::Join':
+                        - ':'
+                        -
+                          - 'arn:aws:logs'
+                          - Ref: 'AWS::Region'
+                          - Ref: 'AWS::AccountId'
+                          - 'log-group:/aws/lambda/*:*:*'
+                - Effect: Allow
+                  Action:
+                    - dynamodb:PutItem
+                    - dynamodb:DeleteItem
+                    - dynamodb:Query
+                    - dynamodb:UpdateItem
+                  Resource:
+                    - 'Fn::Join':
+                        - ':'
+                        -
+                          - 'arn:aws:dynamodb'
+                          - Ref: 'AWS::Region'
+                          - Ref: 'AWS::AccountId'
+                          - 'table/sensor-data'
+                - Effect: Allow
+                  Action:
+                    - SNS:Publish
+                  Resource: !Ref SNSTopic
+                - Effect: Allow
+                  Action:
+                    - dynamodb:ListTables
+                  Resource: "*"
+    SNSTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+       TopicName: SNSTopic
+
+    LambdaInvokePermission:
+      Type: AWS::Lambda::Permission
+      DependsOn:
+        - SNSTopic
+        - SlackNotifierLambdaFunction
+      Properties:
+        Action: "lambda:InvokeFunction"
+        Principal: "sns.amazonaws.com"
+        SourceArn: !Ref SNSTopic
+        FunctionName:
+          Fn::Join:
+            - ''
+            - - Fn::GetAtt:
+                  - "SlackNotifierLambdaFunction"
+                  - "Arn"

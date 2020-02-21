@@ -1,0 +1,65 @@
+{
+  "name": "aws-apigw-lambda-dynamodb-typescript",
+  "version": "1.0.0",
+  "description": "create, retrieve and delete the sensor data",
+  "repository": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "npm run build && npm run watch",
+    "build": "npm run build-ts && npm run test",
+    "buildntest": "npm run build-ts && npm run tslint",
+    "buildfresh": "npm install && build",
+    "deploy": "npm install && npm run build && sls deploy --verbose",
+    "destroy": "sls remove --verbose",
+    "watch": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Test\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run test\"",
+    "test": "jest --coverage --forceExit",
+    "build-ts": "tsc",
+    "watch-ts": "tsc -w",
+    "tslint": "tslint -c tslint.json -p tsconfig.json"
+  },
+  "author": "",
+  "license": "",
+  "devDependencies": {
+    "@types/aws-lambda": "0.0.21",
+    "@types/jest": "~21.1.8",
+    "@types/nock": "^8.2.1",
+    "@types/node": "^8.10.20",
+    "aws-sdk": "^2.264.1",
+    "aws-sdk-mock": "^4.0.0",
+    "concurrently": "^3.6.0",
+    "jest": "^21.1.0",
+    "jest-cli": "^21.2.1",
+    "jest-mock-now": "^1.2.0",
+    "jest-when": "^1.1.0",
+    "nock": "9.3.3",
+    "ts-jest": "^21.2.3",
+    "tslint": "^5.8.0",
+    "tslint-config-olo": "^0.2.0",
+    "tslint-sonarts": "^1.4.0",
+    "typescript": "^2.9.2",
+    "typescript-ioc": "^1.0.2",
+    "serverless": "^1.33.2",
+    "serverless-aws-documentation": "^1.1.0"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json"
+    ],
+    "mapCoverage": true,
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "<rootDir>/dist/",
+      "<rootDir>/src/",
+      "<rootDir>/node_modules/"
+    ]
+  },
+  "dependencies": {}
+}

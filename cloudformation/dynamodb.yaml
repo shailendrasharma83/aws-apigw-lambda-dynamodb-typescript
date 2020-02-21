@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  SensorDataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: SensorId
+        AttributeType: "S"
+      - AttributeName: Timestamp
+        AttributeType: "S"
+      TableName: "sensor-data"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      KeySchema:
+      - AttributeName: SensorId
+        KeyType: HASH
+      - AttributeName: Timestamp
+        KeyType: RANGE
