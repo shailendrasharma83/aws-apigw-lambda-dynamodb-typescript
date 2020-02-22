@@ -1,0 +1,144 @@
+swagger: "2.0"
+info:
+  description: "APIs for managing and retriving sensor data"
+  version: "1.0.0"
+  title: "Sensor Data"
+  contact:
+    email: "abc@xyz.com"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "sensor-data.swagger.io"
+basePath: "/v1"
+schemes:
+  - "https"
+paths:
+  "/sensor-data":
+    get:
+      summary: "Query Sensor Data"
+      description: "Demonstrates a get method for querying sensor data from DB"
+      operationId: "querySensorData"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "query"
+          name: "sensorId"
+          type: "string"
+          description: "Sensor ID"
+          required: true
+      responses:
+        200:
+          description: "Success"
+          schema:
+            $ref: "#/definitions/SensorData"
+        400:
+          description: "Input Validation Failure"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        404:
+          description: "No Data Found"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        500:
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    post:
+      summary: "Create Sensor Data"
+      description: "Demonstrates a post method for adding sensor data"
+      operationId: "createOrUpdateSensorData"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "SensorData"
+          required: true
+          schema:
+            $ref: "#/definitions/SensorData"
+      responses:
+        200:
+          description: "Success"
+          schema:
+            $ref: "#/definitions/SensorData"
+        400:
+          description: "Input Validation Failure"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        404:
+          description: "No Data Found"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        500:
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    delete:
+      summary: "Delete Sensor Data"
+      description: "Demonstrates a delete method for deleting sensor data"
+      operationId: "deleteSensorData"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "SensorData"
+          required: true
+          schema:
+            $ref: "#/definitions/SensorData"
+      responses:
+        responses:
+          200:
+            description: "Success"
+            schema:
+              $ref: "#/definitions/SensorData"
+          400:
+            description: "Input Validation Failure"
+            schema:
+              $ref: "#/definitions/ErrorResponse"
+          404:
+            description: "No Data Found"
+            schema:
+              $ref: "#/definitions/ErrorResponse"
+          500:
+            description: "Internal Server Error"
+            schema:
+              $ref: "#/definitions/ErrorResponse"
+
+securityDefinitions:
+  api_key:
+    type: "apiKey"
+    name: "api_key"
+    in: "header"
+definitions:
+  SensorData:
+    type: "object"
+    properties:
+      SensorId:
+        type: "string"
+      TimeStamp:
+        type: "string"
+        format: "date-time"
+      Topic:
+        type: "string"
+      Payload:
+        type: "object"
+        properties:
+          Temperature:
+            type: "string"
+          TimeStamp:
+            type: "string"
+            format: "date-time"
+  ErrorResponse:
+    type: "object"
+    properties:
+      status:
+        type: "number"
+      code:
+        type: "string"
+      title:
+        type: "string"
