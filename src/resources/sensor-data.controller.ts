@@ -5,13 +5,12 @@ import {SensorData} from "../scalar/SensorData";
 import {Conditions} from "../shared/conditions";
 import {SensorDataErrorCode} from "../constants/sensor-data-error-code";
 import {DeletionNotification} from "../scalar/DeletionNotification";
-import * as AWS from 'aws-sdk';
-
-const awsSns = new AWS.SNS()
 
 export class SensorDataController {
 
-    public constructor(private sensorDataService: SensorDataService, private responseBuilder: ResponseBuilder) {
+    public constructor(private sensorDataService: SensorDataService,
+                       private responseBuilder: ResponseBuilder,
+                       private awsSns: AWS.SNS) {
     }
 
     public querySensorData: ApiHandler = async (event: ApiEvent, context: ApiContext, callback: ApiCallback): Promise<void> => {
@@ -65,7 +64,7 @@ export class SensorDataController {
                     TopicArn: process.env.TOPIC_ARN
                 };
 
-                awsSns.publish(params).promise();
+                this.awsSns.publish(params).promise();
                 resolve()
             } catch (error) {
                 console.error(`triggerConfirmationEmail:ERROR\n${error}\n${error.stack}`);
@@ -105,9 +104,12 @@ export class SensorDataController {
 
         return {
             SensorId: parsedRequestBody.SensorId,
-            Timestamp: parsedRequestBody.Timestamp,
+            Timestamp: new Date(parsedRequestBody.Timestamp),
             Topic: parsedRequestBody.Topic,
-            Payload: parsedRequestBody.Payload,
+            Payload: {
+                "Temperature": parsedRequestBody.Payload.Temperature,
+                "Timestamp": new Date(parsedRequestBody.Payload.Timestamp)
+            },
         } as SensorData;
     }
 }

@@ -2,11 +2,12 @@ import {SensorData} from "../scalar/SensorData";
 import {SensorDataBuilder} from "../scalar/SensorDataBuilder";
 import {PayloadBuilder} from "../scalar/PayloadBuilder";
 import {InternalServerErrorResult, NoDataFoundException} from "../shared/errors";
-
-const AWS = require('aws-sdk')
-const dynamodb = new AWS.DynamoDB();
+import {AttributeValue, DeleteItemInput, PutItemInput, PutItemInputAttributeMap} from "aws-sdk/clients/dynamodb";
 
 export class SensorDataService {
+    public constructor(private dynamodb: AWS.DynamoDB) {
+    }
+
     public querySensorData(sensorId: string): Promise<SensorData> {
         return new Promise<SensorData>(async (resolve, reject) => {
             let results: SensorData[] = [], result
@@ -18,7 +19,7 @@ export class SensorDataService {
                     KeyConditionExpression: 'SensorId = :SensorId',
                     TableName: "sensor-data"
                 };
-                result = await dynamodb.query(params).promise();
+                result = await this.dynamodb.query(params).promise();
 
                 if (!result || !result.Items.length) throw new NoDataFoundException('error.no.data.found')
 
@@ -29,7 +30,6 @@ export class SensorDataService {
                 })
                 resolve(results[0])
             } catch (error) {
-                console.log(error)
                 if (error.status === 404) {
                     reject(error)
                 }
@@ -45,26 +45,26 @@ export class SensorDataService {
                         Item: {
                             "SensorId": {
                                 S: sensorData.SensorId
-                            },
+                            } as AttributeValue,
                             "Timestamp": {
-                                S: sensorData.Timestamp
-                            },
+                                S: sensorData.Timestamp.toISOString()
+                            } as AttributeValue,
                             "Topic": {
                                 S: sensorData.Topic
-                            },
+                            } as AttributeValue,
                             "Payload": {
                                 M: {
                                     "Temperature": {"S": sensorData.Payload.Temperature},
-                                    "Timestamp": {"S": sensorData.Payload.Timestamp}
+                                    "Timestamp": {"S": sensorData.Payload.Timestamp.toISOString()}
                                 }
-                            }
-                        },
+                            } as AttributeValue
+                        } as PutItemInputAttributeMap,
                         ReturnConsumedCapacity: "NONE",
                         TableName: "sensor-data"
-                    };
+                    } as PutItemInput;
                     console.log(JSON.stringify(params))
 
-                    await dynamodb.putItem(params).promise();
+                    await this.dynamodb.putItem(params).promise();
                     resolve(sensorData)
                 } catch
                     (error) {
@@ -82,15 +82,15 @@ export class SensorDataService {
                     Key: {
                         "SensorId": {
                             S: sensorData.SensorId
-                        },
+                        } as AttributeValue,
                         "Timestamp": {
-                            S: sensorData.Timestamp
-                        }
+                            S: sensorData.Timestamp.toISOString()
+                        } as AttributeValue
                     },
                     TableName: "sensor-data"
-                };
+                } as DeleteItemInput;
                 let data: SensorData = await this.querySensorData(sensorData.SensorId)
-                await dynamodb.deleteItem(params).promise();
+                await this.dynamodb.deleteItem(params).promise();
                 resolve(data)
             } catch (error) {
                 console.log(error)

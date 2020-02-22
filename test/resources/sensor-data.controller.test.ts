@@ -1,7 +1,7 @@
 /* tslint:disable */
 import {SensorDataController} from '../../src/resources/sensor-data.controller';
 import {when} from 'jest-when';
-import {MockApiContext, MockCallback, MockResponseBuilder, Mocks, MockSensorDataService} from '../mocks';
+import {MockApiContext, MockCallback, MockResponseBuilder, Mocks, MockSensorDataService, MockSNS} from '../mocks';
 import {ResponseBuilder} from "../../src/shared/response-builder";
 import {SensorDataService} from '../../src/services/sensor-data.service';
 import {SensorDataErrorCode} from "../../src/constants/sensor-data-error-code";
@@ -14,11 +14,13 @@ let mockResponseBuilder: ResponseBuilder;
 let mockSensorDataService: SensorDataService;
 const sensorId = "1234"
 let date;
+let awsSNS;
 
 beforeEach(() => {
+    awsSNS = MockSNS();
     mockSensorDataService = new MockSensorDataService()
     mockResponseBuilder = MockResponseBuilder;
-    classUnderTest = new SensorDataController(mockSensorDataService, MockResponseBuilder)
+    classUnderTest = new SensorDataController(mockSensorDataService, MockResponseBuilder, awsSNS)
     console.log = jest.fn();
     date = new Date()
 }
