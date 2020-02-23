@@ -19,8 +19,6 @@
    # npm install
     npm install --prod
    
-   # Create IAM Roles
-    aws --profile sandbox cloudformation create-stack --stack-name MySkillsDemoIAMRoles --template-body file://iam.yaml --capabilities CAPABILITY_NAMED_IAM
    # Create Dynamo DB Table
     aws --profile sandbox cloudformation create-stack --stack-name MySkillsDemoPrerequisites --template-body file://dynamodb.yaml --capabilities CAPABILITY_NAMED_IAM
    
@@ -37,12 +35,7 @@
     }
     
    	
-    ** Note :: **
-    Payload is a Map of Temperature (String) and Timestamp (String)
-    SensorIdString, TimestampString, TopicString are string data type
- 
- 
-  # Running Tests
+   # Running Tests
   
      npm run build
   
@@ -60,4 +53,4 @@
      2) Add a cognito user pool authorizer and map cognito pool with AD through SAML federation
         Or add a custom auth lambda and write logic to authenticate
         Or use Developer authenticated identities
-     3) APIs can be further guarded by allowing traffic from certain IP CIDRs i.e. IPs of WAF 
+     3) APIs can be further guarded by allowing traffic from certain IP CIDRs e.g. IPs of WAF 
