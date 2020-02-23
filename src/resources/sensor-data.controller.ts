@@ -27,7 +27,6 @@ export class SensorDataController {
 
     public createOrUpdateSensorData: ApiHandler = async (event: ApiEvent, context: ApiContext, callback: ApiCallback): Promise<void> => {
         try {
-            console.log(event)
             let request = this.parsePostRequestFrom(JSON.parse(event.body), this.parseBody);
             let response: SensorData = await this.sensorDataService.createOrUpdateSensorData(request)
             return this.responseBuilder.ok<SensorData>(response, callback);
@@ -93,8 +92,6 @@ export class SensorDataController {
 
     private parseBody(event: any): SensorData {
         const parsedRequestBody: SensorData = JSON.parse(JSON.stringify(event));
-        console.log("parsedRequestBody")
-        console.log(parsedRequestBody)
 
         Conditions.checkExistence(parsedRequestBody, 'body.json.invalid');
         Conditions.checkExistence(parsedRequestBody.SensorId, 'error.SensorId.invalid');

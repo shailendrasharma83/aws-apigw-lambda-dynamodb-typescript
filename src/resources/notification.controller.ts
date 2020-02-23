@@ -28,7 +28,7 @@ export class NotificationController {
             req.write(util.format("%j", postData));
             req.end();
         } catch (error) {
-            console.log("Slack Publishing Error")
+            console.error(error)
             throw SensorDataErrorCode.SlackPublishingError();
         }
     }

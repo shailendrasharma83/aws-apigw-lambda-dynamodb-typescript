@@ -30,6 +30,7 @@ export class SensorDataService {
                 })
                 resolve(results[0])
             } catch (error) {
+                console.error(error)
                 if (error.status === 404) {
                     reject(error)
                 }
@@ -66,9 +67,8 @@ export class SensorDataService {
 
                     await this.dynamodb.putItem(params).promise();
                     resolve(sensorData)
-                } catch
-                    (error) {
-                    console.log(error)
+                } catch (error) {
+                    console.error(error)
                     reject(new InternalServerErrorResult('error.db.call.failed'))
                 }
             }
@@ -93,7 +93,7 @@ export class SensorDataService {
                 await this.dynamodb.deleteItem(params).promise();
                 resolve(data)
             } catch (error) {
-                console.log(error)
+                console.error(error)
                 reject(new InternalServerErrorResult('error.db.call.failed'))
             }
         });
